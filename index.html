@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0f172a">
+<title>Shreeji Library - Seat & Fee Manager</title>
+<style>
+:root{
+  --bg:#f1f5f9;--card:#fff;--text:#0f172a;--muted:#64748b;
+  --primary:#2563eb;--primary2:#1d4ed8;--green:#16a34a;--red:#dc2626;
+  --amber:#d97706;--border:#e2e8f0;--shadow:0 4px 15px rgba(15,23,42,.06);
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text);padding-bottom:30px}
+button,input,select{font:inherit}
+button{cursor:pointer;border:0}
+.header{background:linear-gradient(135deg,#0f172a,#1e3a8a);color:white;padding:14px 12px;position:sticky;top:0;z-index:20;box-shadow:0 3px 10px rgba(0,0,0,0.2)}
+.header-inner{max-width:1200px;margin:auto;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+h1{font-size:18px;margin:0 0 2px}.subtitle{font-size:11px;opacity:.8}
+.container{max-width:1200px;margin:auto;padding:12px}
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:12px}
+@media(min-width:768px){.stats{grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:14px}}
+.stat{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px;box-shadow:var(--shadow)}
+.stat .label{font-size:11px;color:var(--muted)}.stat .num{font-size:20px;font-weight:800;margin-top:2px}
+.toolbar{background:white;border:1px solid var(--border);border-radius:12px;padding:10px;display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;box-shadow:var(--shadow)}
+.toolbar input, .toolbar select{flex:1;min-width:120px;padding:8px 10px;font-size:13px;border:1px solid #cbd5e1;border-radius:8px}
+.toolbar .btn{flex:0 0 auto;padding:8px 12px;font-size:13px}
+.btn{padding:8px 12px;border-radius:8px;font-weight:700}.primary{background:var(--primary);color:white}.primary:hover{background:var(--primary2)}
+.secondary{background:#e2e8f0;color:#0f172a}.green{background:#dcfce7;color:#166534}.red{background:#fee2e2;color:#991b1b}.dark{background:#0f172a;color:white}.orange{background:#ffedd5;color:#9a3412}.whatsapp{background:#25d366;color:white}.purple{background:#f3e8ff;color:#6b21a8}
+.section{background:white;border:1px solid var(--border);border-radius:14px;padding:12px;box-shadow:var(--shadow);margin-bottom:14px}
+.section-title{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px}.section-title h2{font-size:15px;margin:0}
+.legend{display:flex;gap:8px;flex-wrap:wrap;font-size:11px;color:var(--muted)}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:3px}.dg{background:#22c55e}.dr{background:#ef4444}.de{background:#94a3b8}
+
+.seats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+@media(min-width:480px){.seats{grid-template-columns:repeat(5,1fr)}}
+@media(min-width:900px){.seats{grid-template-columns:repeat(7,1fr)}}
+.seat{height:105px;border-radius:10px;padding:8px;border:2px solid #cbd5e1;background:#f8fafc;text-align:left;position:relative;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden;transition:.15s}
+.seat:active{transform:scale(0.97)}
+.seat.occupied{background:#effdf4;border-color:#86efac}.seat.pending{background:#fff7ed;border-color:#fdba74}.seat.empty{background:#f8fafc;border-style:dashed}
+.seatno{font-size:10px;font-weight:800;color:#475569}
+.seatname{font-size:13px;font-weight:800;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%}
+.seatphone{font-size:10px;color:#64748b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.badge{display:inline-block;font-size:9px;font-weight:800;padding:2px 6px;border-radius:999px}.paid{background:#dcfce7;color:#166534}.pending-b{background:#fee2e2;color:#991b1b}.empty-b{background:#e2e8f0;color:#475569}
+
+.table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}.members-table{width:100%;border-collapse:collapse;min-width:600px}.members-table th,.members-table td{padding:8px;border-bottom:1px solid var(--border);text-align:left;font-size:12px}.members-table th{background:#f8fafc;color:#475569}
+.actions{display:flex;gap:4px;flex-wrap:wrap}.small{padding:5px 7px;border-radius:6px;font-size:11px;font-weight:700}
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:50;padding:10px;overflow-y:auto}.modal{background:white;width:100%;max-width:550px;margin:20px auto;border-radius:16px;box-shadow:0 15px 30px rgba(0,0,0,0.3);overflow:hidden}
+.modal-head{padding:14px;background:#0f172a;color:white;display:flex;justify-content:space-between;align-items:center}.modal-head h3{margin:0;font-size:16px}.close{background:transparent;color:white;font-size:22px;padding:0}
+.modal-body{padding:14px}.form-grid{display:grid;grid-template-columns:1fr;gap:10px}
+@media(min-width:500px){.form-grid{grid-template-columns:1fr 1fr}}
+.field label{display:block;font-size:11px;font-weight:700;color:#475569;margin-bottom:4px}.field input,.field select{width:100%;padding:9px;border:1px solid #cbd5e1;border-radius:8px;font-size:13px}
+.full{grid-column:1/-1}.modal-actions{display:flex;justify-content:flex-end;gap:6px;margin-top:12px;flex-wrap:wrap}
+.fee-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px}.month{border:1px solid var(--border);border-radius:8px;padding:8px;background:#f8fafc}.month strong{font-size:11px}.month .mrow{display:flex;justify-content:space-between;align-items:center;gap:4px;margin-top:4px}.month button{padding:4px 6px;border-radius:6px;font-size:10px;font-weight:800}
+.empty-state{text-align:center;color:var(--muted);padding:15px;font-size:13px}
+.toast{position:fixed;right:12px;bottom:12px;background:#0f172a;color:white;padding:10px 14px;border-radius:8px;display:none;z-index:100;box-shadow:var(--shadow);font-size:12px}
+.note{font-size:11px;color:var(--muted);margin-top:6px}
+</style>
+</head>
+<body>
+<header class="header">
+  <div class="header-inner">
+    <div><h1>📚 SHREEJI LIBRARY</h1><div class="subtitle">Seat & Fee Manager</div></div>
+    <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+      <div style="background:#1e293b;padding:4px 8px;border-radius:6px;display:flex;align-items:center;gap:4px;">
+        <span style="font-size:11px;color:#94a3b8;">Month:</span>
+        <input type="month" id="globalMonthPicker" style="padding:2px 4px;font-size:12px;background:white;border:none;border-radius:4px;" onchange="changeActiveMonth()">
+      </div>
+      <button class="btn purple" style="padding:6px 10px;font-size:12px;" onclick="openMonthlyReportModal()">📊 Report</button>
+      <button class="btn primary" style="padding:6px 10px;font-size:12px;" onclick="openMemberModal()">＋ Add</button>
+    </div>
+  </div>
+</header>
+
+<main class="container">
+  <div class="stats">
+    <div class="stat"><div class="label">Total Seats</div><div class="num" id="totalSeats">35</div></div>
+    <div class="stat"><div class="label">Fixed Occupied</div><div class="num" id="occupied">0</div></div>
+    <div class="stat"><div class="label">Empty Seats</div><div class="num" id="empty">35</div></div>
+    <div class="stat"><div class="label">Unfixed Members</div><div class="num" id="unfixedCount">0</div></div>
+    <div class="stat"><div class="label">Paid (<span id="activeMonthLabel"></span>)</div><div class="num" id="paidCount">0</div></div>
+    <div class="stat"><div class="label">Collection (<span id="activeMonthLabel2"></span>)</div><div class="num" id="collection">₹0</div></div>
+  </div>
+
+  <div class="toolbar">
+    <input id="search" placeholder="🔎 Search name / phone / seat..." oninput="render()">
+    <select id="statusFilter" onchange="render()">
+      <option value="all">All Members</option><option value="fixed">Fixed Seat (₹1100)</option><option value="unfixed">Unfixed (₹900)</option><option value="paid">Paid</option><option value="pending">Pending</option>
+    </select>
+    <button class="btn green" onclick="exportData()">⬇ Backup</button>
+    <button class="btn orange" onclick="document.getElementById('fileInput').click()">⬆ Restore</button>
+    <button class="btn red" onclick="clearAll()">🗑 Clear</button>
+    <input id="fileInput" type="file" accept=".json" style="display:none" onchange="importData(event)">
+  </div>
+
+  <section class="section">
+    <div class="section-title">
+      <h2>🪑 Seat Layout (35 Fixed Seats)</h2>
+      <div class="legend"><span><i class="dot dg"></i>Paid</span><span><i class="dot dr"></i>Pending</span><span><i class="dot de"></i>Empty</span></div>
+    </div>
+    <div id="seats" class="seats"></div>
+  </section>
+
+  <section class="section">
+    <div class="section-title"><h2>👥 Members List</h2><span class="note">Manage all members</span></div>
+    <div class="table-wrap"><table class="members-table">
+      <thead><tr><th>Type</th><th>Name</th><th>Phone</th><th>Fee</th><th>Status</th><th>Joining</th><th>Actions</th></tr></thead>
+      <tbody id="memberRows"></tbody>
+    </table></div>
+  </section>
+</main>
+
+<!-- Member Modal -->
+<div id="modal" class="overlay">
+  <div class="modal">
+    <div class="modal-head"><h3 id="modalTitle">Add Member</h3><button class="close" onclick="closeModal()">×</button></div>
+    <div class="modal-body">
+      <form id="memberForm" onsubmit="saveMember(event)">
+        <input type="hidden" id="editId">
+        <div class="form-grid">
+          <div class="field">
+            <label>Member Type *</label>
+            <select id="memberType" onchange="handleTypeChange()">
+              <option value="fixed">Fixed Seat — ₹1100</option>
+              <option value="unfixed">Unfixed (No Seat) — ₹900</option>
+            </select>
+          </div>
+          <div class="field" id="seatFieldContainer">
+            <label>Seat Number *</label><select id="seat"></select>
+          </div>
+          <div class="field"><label>Member Name *</label><input id="name" required placeholder="e.g. Rahul Ahir"></div>
+          <div class="field"><label>Mobile Number</label><input id="phone" inputmode="tel" placeholder="10 digit number"></div>
+          <div class="field"><label>Monthly Fee (₹) *</label><input id="fee" type="number" min="0" required value="1100"></div>
+          <div class="field"><label>Joining Date</label><input id="joining" type="date"></div>
+          <div class="field full"><label>Note</label><input id="note" placeholder="Optional"></div>
+          <div class="full" id="feeHistory"></div>
+        </div>
+        <div class="modal-actions" id="modalButtons">
+          <button type="button" class="btn secondary" onclick="closeModal()">Cancel</button>
+          <button class="btn primary" type="submit">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Monthly Report Modal -->
+<div id="reportModal" class="overlay">
+  <div class="modal" style="max-width:650px;">
+    <div class="modal-head" style="background:#6b21a8;">
+      <h3>📊 Monthly Report</h3>
+      <button class="close" onclick="closeReportModal()">×</button>
+    </div>
+    <div class="modal-body" id="reportModalBody"></div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+const TOTAL_SEATS=35;
+const KEY="shreeji_library_manager_v12";
+const MONTH_NAMES=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+let members=load();
+let activeYearMonth = currentKey();
+
+function load(){try{return JSON.parse(localStorage.getItem(KEY)||"[]")}catch(e){return[]}}
+function save(){localStorage.setItem(KEY,JSON.stringify(members))}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2)}
+function currentKey(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")}
+function money(n){return "₹"+Number(n||0).toLocaleString("en-IN")}
+function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
+function getMember(seat){return members.find(m=>m.type!=="unfixed" && Number(m.seat)===Number(seat))}
+function isPaidForActive(m){return !!m?.payments?.[activeYearMonth]}
+function toast(msg){const t=document.getElementById("toast");t.textContent=msg;t.style.display="block";clearTimeout(window._toast);window._toast=setTimeout(()=>t.style.display="none",2200)}
+
+document.getElementById("globalMonthPicker").value = activeYearMonth;
+
+function changeActiveMonth(){
+  activeYearMonth = document.getElementById("globalMonthPicker").value;
+  render();
+}
+
+function handleTypeChange(){
+  const type=document.getElementById("memberType").value;
+  const seatCont=document.getElementById("seatFieldContainer");
+  const feeInput=document.getElementById("fee");
+  if(type==="unfixed"){
+    seatCont.style.display="none";
+    feeInput.value=900;
+  } else {
+    seatCont.style.display="block";
+    feeInput.value=1100;
+  }
+}
+
+function render(){
+  const [yStr, mStr] = activeYearMonth.split("-");
+  const monthNiceName = MONTH_NAMES[parseInt(mStr, 10)-1] + " " + yStr;
+  document.getElementById("activeMonthLabel").textContent = monthNiceName;
+  document.getElementById("activeMonthLabel2").textContent = monthNiceName;
+
+  const q=document.getElementById("search").value.toLowerCase().trim(), filter=document.getElementById("statusFilter").value;
+  let occupied=0,unfixedCount=0,paid=0,collection=0;
+  
+  members.forEach(m=>{
+    const feeVal = Number(m.fee || (m.type==="unfixed"?900:1100));
+    if(isPaidForActive(m)){
+      paid++;
+      collection += feeVal;
+    }
+    if(m.type==="unfixed"){
+      unfixedCount++;
+    } else {
+      occupied++;
+    }
+  });
+
+  document.getElementById("occupied").textContent=occupied;
+  document.getElementById("empty").textContent=TOTAL_SEATS-occupied;
+  document.getElementById("unfixedCount").textContent=unfixedCount;
+  document.getElementById("paidCount").textContent=paid;
+  document.getElementById("collection").textContent=money(collection);
+
+  const seats=document.getElementById("seats"); seats.innerHTML="";
+  for(let s=1;s<=TOTAL_SEATS;s++){
+    const m=getMember(s);
+    const div=document.createElement("button");
+    div.className=`seat ${m?"occupied":"empty"} ${m&&!isPaidForActive(m)?"pending":""}`;
+    div.onclick=()=>m?openDetails(m.id):openMemberModal(null,s);
+    div.innerHTML=`
+      <div class="seatno">Seat ${s}</div>
+      <div class="seatname" title="${m?esc(m.name):''}">${m?esc(m.name):"Empty"}</div>
+      <div class="seatphone">${m?esc(m.phone||"No phone"): "Click to add"}</div>
+      <span class="badge ${m?(isPaidForActive(m)?"paid":"pending-b"):"empty-b"}">${m?(isPaidForActive(m)?"✓ PAID":"! PENDING"):"AVAILABLE"}</span>
+    `;
+    seats.appendChild(div);
+  }
+
+  const rows=document.getElementById("memberRows"); rows.innerHTML="";
+  const sorted=[...members].sort((a,b)=>{
+    if(a.type==="unfixed" && b.type!=="unfixed") return 1;
+    if(a.type!=="unfixed" && b.type==="unfixed") return -1;
+    return Number(a.seat||0)-Number(b.seat||0);
+  });
+
+  const filtered=sorted.filter(m=>{
+    const hay=`${m.name} ${m.phone||""} ${m.seat||""} ${m.type}`.toLowerCase();
+    let matchFilter = true;
+    if(filter==="fixed") matchFilter = (m.type!=="unfixed");
+    if(filter==="unfixed") matchFilter = (m.type==="unfixed");
+    if(filter==="paid") matchFilter = isPaidForActive(m);
+    if(filter==="pending") matchFilter = !isPaidForActive(m);
+    return hay.includes(q) && matchFilter;
+  });
+
+  filtered.forEach(m=>{
+    const tr=document.createElement("tr");
+    let waBtn = '';
+    let typeBadge = m.type==="unfixed" ? '<span class="badge" style="background:#fef3c7;color:#92400e;">Unfixed (₹900)</span>' : `<span class="badge" style="background:#e0f2fe;color:#0369a1;">Seat ${m.seat} (₹1100)</span>`;
+    
+    if(m.phone){
+      let msg = "";
+      const defaultFee = money(m.fee || (m.type==="unfixed"?900:1100));
+      let seatText = m.type==="unfixed" ? "અનફિક્સ સભ્ય" : `સીટ નં: ${m.seat}`;
+
+      if(isPaidForActive(m)){
+        // Smart Receipt Message for WhatsApp when paid
+        msg = encodeURIComponent(`📚 *શ્રીજી લાઈબ્રેરી - ફી પહોંચ (Receipt)*\n-----------------------------------\n*નામ:* ${m.name}\n*પ્રકાર:* ${seatOrTypeTextName(m)}\n*મહિનો:* ${monthNiceName}\n*ભરેલી રકમ:* ${defaultFee}\n*સ્ટેટસ:* ✓ ફી ભરેલ (Paid)\n-----------------------------------\nધন্যবাদ! શ્રીજી લાઈબ્રેરી મેનેજમેન્ટ`);
+      } else {
+        // Pending Reminder Message when unpaid
+        msg = encodeURIComponent(`નમસ્તે ${m.name}, શ્રીજી લાઈબ્રેરી (${seatText}) તરફથી યાદ અપાવવાનું કે આપની આ મહિનાની ફી ${defaultFee} બાકી છે. કૃપા કરીને સમયસર ફી ભરી જવા વિનંતી છે, જેથી આપનું સીટ કન્ફર્મ રહે. ધન્યવાદ!\nશ્રીજી લાઈબ્રેરી મેનેજમેન્ટ`);
+      }
+      waBtn = `<button class="small whatsapp" onclick="window.open('https://wa.me/91${m.phone}?text=${msg}')">WA</button>`;
+    }
+    
+    tr.innerHTML=`<td><b>${typeBadge}</b></td><td><b>${esc(m.name)}</b></td><td>${esc(m.phone||"-")}</td><td>${money(m.fee || (m.type==="unfixed"?900:1100))}</td>
+      <td><span class="badge ${isPaidForActive(m)?"paid":"pending-b"}">${isPaidForActive(m)?"✓ Paid":"Pending"}</span></td>
+      <td>${esc(m.joining||"-")}</td>
+      <td><div class="actions">
+        <button class="small ${isPaidForActive(m)?"red":"green"}" onclick="toggleActivePayment('${m.id}')">${isPaidForActive(m)?"Undo":"Paid"}</button>
+        <button class="small secondary" onclick="openMemberModal('${m.id}')">Edit</button>
+        <button class="small dark" onclick="openDetails('${m.id}')">Fees</button>
+        ${waBtn}
+        <button class="small red" onclick="deleteMember('${m.id}')">Del</button>
+      </div></td>`;
+    rows.appendChild(tr);
+  });
+  if(!filtered.length)rows.innerHTML='<tr><td colspan="7" class="empty-state">No members found.</td></tr>';
+}
+
+function seatOrTypeTextName(m){
+  return m.type==="unfixed" ? "Unfixed Member" : "Seat " + m.seat;
+}
+
+function fillSeats(selected){
+  const sel=document.getElementById("seat");sel.innerHTML="";
+  for(let s=1;s<=TOTAL_SEATS;s++){
+    const m=getMember(s);
+    if(!m||Number(s)===Number(selected))sel.innerHTML+=`<option value="${s}">Seat ${s}${m?" — "+esc(m.name):" — Empty"}</option>`;
+  }
+  if(selected)sel.value=selected;
+}
+
+function openMemberModal(id=null,preSeat=null){
+  document.getElementById("modal").style.display="block";
+  document.getElementById("modalTitle").textContent=id?"Edit Member":"Add Member";
+  document.getElementById("editId").value=id||"";
+  const m=id?members.find(x=>x.id===id):null;
+  
+  if(m){
+    document.getElementById("memberType").value = m.type || "fixed";
+  } else {
+    document.getElementById("memberType").value = "fixed";
+  }
+  handleTypeChange();
+
+  fillSeats(m?.seat?m.seat:preSeat);
+  document.getElementById("name").value=m?.name||"";
+  document.getElementById("phone").value=m?.phone||"";
+  document.getElementById("fee").value=m?.fee ?? (document.getElementById("memberType").value==="unfixed"?900:1100);
+  document.getElementById("joining").value=m?.joining||new Date().toISOString().slice(0,10);
+  document.getElementById("note").value=m?.note||"";
+  document.getElementById("feeHistory").innerHTML=m?feeHistoryHTML(m):"<p style='font-size:11px;color:gray;margin-top:6px;'>Advance or past fees can be managed after saving.</p>";
+  
+  let btnContainer = document.getElementById("modalButtons");
+  btnContainer.innerHTML = `<button type="button" class="btn secondary" onclick="closeModal()">Cancel</button><button class="btn primary" type="submit">Save</button>`;
+  if(m){
+    btnContainer.innerHTML += `<button type="button" class="btn orange" onclick="printReceipt('${m.id}')">🖨 Receipt</button>`;
+  }
+}
+
+function closeModal(){document.getElementById("modal").style.display="none"}
+function closeReportModal(){document.getElementById("reportModal").style.display="none"}
+
+function saveMember(e){
+  e.preventDefault();
+  const id=document.getElementById("editId").value;
+  const type=document.getElementById("memberType").value;
+  const seat=type==="fixed"?Number(document.getElementById("seat").value):null;
+  
+  if(type==="fixed"){
+    const duplicate=members.find(m=>m.type!=="unfixed" && Number(m.seat)===seat&&m.id!==id);
+    if(duplicate){toast("That seat is already occupied!");return}
+  }
+
+  const old=id?members.find(x=>x.id===id):null;
+  const m=old||{id:uid(),payments:{}};
+  m.type=type;
+  m.seat=seat;
+  m.name=document.getElementById("name").value.trim();
+  m.phone=document.getElementById("phone").value.trim();
+  m.fee=Number(document.getElementById("fee").value||(type==="unfixed"?900:1100));
+  m.joining=document.getElementById("joining").value;
+  m.note=document.getElementById("note").value.trim();
+  
+  if(!old)members.push(m);
+  save();closeModal();render();
+  toast(old?"Member updated successfully":"Member added");
+}
+
+function toggleActivePayment(id){
+  const m=members.find(x=>x.id===id);if(!m)return;
+  m.payments=m.payments||{};
+  if(m.payments[activeYearMonth]) delete m.payments[activeYearMonth];
+  else m.payments[activeYearMonth] = new Date().toISOString();
+  save();render();
+  toast(m.payments[activeYearMonth]?"Fee marked as paid":"Payment undone");
+}
+
+function setPayment(id,key){
+  const m=members.find(x=>x.id===id);if(!m)return;m.payments=m.payments||{};
+  if(m.payments[key])delete m.payments[key];else m.payments[key]=new Date().toISOString();
+  save();render();openDetails(id);
+}
+
+function feeHistoryHTML(m){
+  const y=new Date().getFullYear();let out=`<div style="margin-top:10px"><b>12-Month Fee Tracking — ${y}</b><div class="fee-grid">`;
+  for(let i=0;i<12;i++){const key=y+"-"+String(i+1).padStart(2,"0"),paid=!!m.payments?.[key];
+    out+=`<div class="month"><strong>${MONTH_NAMES[i]}</strong><div class="mrow"><span class="badge ${paid?"paid":"pending-b"}">${paid?"PAID":"PEND"}</span><button class="${paid?"red":"green"}" onclick="setPayment('${m.id}','${key}')">${paid?"Undo":"Paid"}</button></div></div>`;
+  }return out+"</div></div>";
+}
+
+function openDetails(id){
+  const m=members.find(x=>x.id===id);if(!m)return;
+  openMemberModal(id);
+}
+
+function openMonthlyReportModal(){
+  document.getElementById("reportModal").style.display="block";
+  const [yStr, mStr] = activeYearMonth.split("-");
+  const curMonthName = MONTH_NAMES[parseInt(mStr, 10)-1] + " " + yStr;
+
+  let paidMembersList = [];
+  let pendingMembersList = [];
+  let totalCollection = 0;
+
+  members.forEach(m => {
+    const feeVal = Number(m.fee || (m.type==="unfixed"?900:1100));
+    if(m.payments && m.payments[activeYearMonth]){
+      paidMembersList.push(m);
+      totalCollection += feeVal;
+    } else {
+      pendingMembersList.push(m);
+    }
+  });
+
+  let paidHtml = paidMembersList.map(m => `<tr><td>${m.type==="unfixed"?"Unfixed":"Seat "+m.seat}</td><td><b>${esc(m.name)}</b></td><td>${esc(m.phone||'-')}</td><td style="color:#16a34a; font-weight:bold;">${money(m.fee||(m.type==="unfixed"?900:1100))}</td></tr>`).join('');
+  if(!paidHtml) paidHtml = '<tr><td colspan="4" class="empty-state">No paid members yet.</td></tr>';
+
+  let pendingHtml = pendingMembersList.map(m => `<tr><td>${m.type==="unfixed"?"Unfixed":"Seat "+m.seat}</td><td><b>${esc(m.name)}</b></td><td>${esc(m.phone||'-')}</td><td style="color:#dc2626; font-weight:bold;">Pending</td></tr>`).join('');
+  if(!pendingHtml) pendingHtml = '<tr><td colspan="4" class="empty-state">No pending members!</td></tr>';
+
+  document.getElementById("reportModalBody").innerHTML = `
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:gap; gap:8px;">
+      <div>
+        <h3 style="margin:0; color:#0f172a; font-size:15px;">Report: ${curMonthName}</h3>
+        <p style="margin:2px 0 0; font-size:11px; color:#64748b;">Shreeji Library Summary</p>
+      </div>
+      <button class="btn primary" style="padding:6px 10px; font-size:12px;" onclick="printMonthlyReport()">🖨 Print</button>
+    </div>
+    
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px;">
+      <div style="background:#f8fafc; border:1px solid #e2e8f0; padding:10px; border-radius:8px;">
+        <div style="font-size:11px; color:#64748b;">Paid Members</div>
+        <div style="font-size:16px; font-weight:800; color:#16a34a; margin-top:2px;">${paidMembersList.length}</div>
+      </div>
+      <div style="background:#f8fafc; border:1px solid #e2e8f0; padding:10px; border-radius:8px;">
+        <div style="font-size:11px; color:#64748b;">Total Collection</div>
+        <div style="font-size:16px; font-weight:800; color:#2563eb; margin-top:2px;">${money(totalCollection)}</div>
+      </div>
+    </div>
+
+    <h4 style="margin:10px 0 6px; font-size:13px; color:#16a34a;">✓ Paid List (${paidMembersList.length})</h4>
+    <div class="table-wrap" style="max-height:150px; overflow-y:auto; border:1px solid #e2e8f0; border-radius:6px;">
+      <table class="members-table"><thead><tr><th>Type</th><th>Name</th><th>Phone</th><th>Status</th></tr></thead><tbody>${paidHtml}</tbody></table>
+    </div>
+
+    <h4 style="margin:10px 0 6px; font-size:13px; color:#dc2626;">! Pending List (${pendingMembersList.length})</h4>
+    <div class="table-wrap" style="max-height:150px; overflow-y:auto; border:1px solid #e2e8f0; border-radius:6px;">
+      <table class="members-table"><thead><tr><th>Type</th><th>Name</th><th>Phone</th><th>Status</th></tr></thead><tbody>${pendingHtml}</tbody></table>
+    </div>
+  `;
+}
+
+function printMonthlyReport(){
+  const [yStr, mStr] = activeYearMonth.split("-");
+  const curMonthName = MONTH_NAMES[parseInt(mStr, 10)-1] + " " + yStr;
+  
+  let paidMembersList = [];
+  let pendingMembersList = [];
+  let totalCollection = 0;
+
+  members.forEach(m => {
+    const feeVal = Number(m.fee || (m.type==="unfixed"?900:1100));
+    if(m.payments && m.payments[activeYearMonth]){
+      paidMembersList.push(m);
+      totalCollection += feeVal;
+    } else {
+      pendingMembersList.push(m);
+    }
+  });
+
+  let paidRows = paidMembersList.map(m => `<tr><td>${m.type==="unfixed"?"Unfixed":"Seat "+m.seat}</td><td>${m.name}</td><td>${m.phone||'-'}</td><td>${money(m.fee||(m.type==="unfixed"?900:1100))}</td></tr>`).join('');
+  let pendingRows = pendingMembersList.map(m => `<tr><td>${m.type==="unfixed"?"Unfixed":"Seat "+m.seat}</td><td>${m.name}</td><td>${m.phone||'-'}</td><td>Pending</td></tr>`).join('');
+
+  let win = window.open('', '_blank');
+  win.document.write(`
+    <html><head><title>Monthly Report - ${curMonthName}</title>
+    <style>body{font-family:Arial;padding:15px;color:#111}h2,h3{text-align:center;margin:4px 0}.summary{display:flex;justify-content:space-around;background:#f1f5f9;padding:10px;border-radius:6px;margin:10px 0;font-weight:bold;font-size:12px}table{width:100%;border-collapse:collapse;margin-top:8px;font-size:12px}th,td{border:1px solid #ccc;padding:6px;text-align:left}th{background:#0f172a;color:#fff}</style></head><body>
+    <h2>📚 SHREEJI LIBRARY</h2>
+    <h3>Monthly Report: ${curMonthName}</h3>
+    <div class="summary"><div>Paid: ${paidMembersList.length}</div><div>Total: ${money(totalCollection)}</div><div>Pending: ${pendingMembersList.length}</div></div>
+    <h4>Paid Members</h4><table><tr><th>Type</th><th>Name</th><th>Phone</th><th>Amount</th></tr>${paidRows || '<tr><td colspan="4">No records</td></tr>'}</table>
+    <h4 style="margin-top:15px;">Pending Members</h4><table><tr><th>Type</th><th>Name</th><th>Phone</th><th>Status</th></tr>${pendingRows || '<tr><td colspan="4">No records</td></tr>'}</table>
+    <script>window.print();<\/script></body></html>
+  `);
+}
+
+function printReceipt(id){
+  const m=members.find(x=>x.id===id);if(!m)return;
+  const y=new Date().getFullYear();
+  let paidMonthsList = [];
+  let totalPaidAmount = 0;
+  const defaultFee = Number(m.fee || (m.type==="unfixed"?900:1100));
+  
+  for(let i=0; i<12; i++){
+    const key = y+"-"+String(i+1).padStart(2,"0");
+    if(m.payments && m.payments[key]){
+      paidMonthsList.push(MONTH_NAMES[i] + " " + y);
+      totalPaidAmount += defaultFee;
+    }
+  }
+
+  let monthsText = paidMonthsList.length > 0 ? paidMonthsList.join(", ") : "No month paid";
+  if(totalPaidAmount === 0) totalPaidAmount = defaultFee;
+  let seatOrTypeText = m.type==="unfixed" ? "Unfixed Member" : "Seat " + m.seat;
+
+  let win = window.open('', '_blank');
+  win.document.write(`
+    <html><head><title>Receipt - ${m.name}</title>
+    <style>body{font-family:Arial,sans-serif;padding:15px;color:#111;background:#f9f9f9}.receipt{max-width:380px;margin:auto;border:2px solid #0f172a;padding:18px;border-radius:12px;background:#fff}.lib-title{text-align:center;color:#0f172a;margin:0 0 4px;font-size:18px}.lib-sub{text-align:center;font-size:11px;color:#64748b;margin-bottom:12px}hr{border:0;border-top:1px dashed #cbd5e1;margin:10px 0}.row{display:flex;justify-content:space-between;margin:6px 0;font-size:13px}.footer{text-align:center;margin-top:18px;font-size:11px;color:#64748b}.badge-paid{background:#dcfce7;color:#166534;padding:3px 6px;border-radius:6px;font-weight:bold;font-size:11px}</style></head><body>
+    <div class="receipt">
+      <h2 class="lib-title">📚 SHREEJI LIBRARY</h2>
+      <div class="lib-sub">Reading Library Management</div>
+      <hr>
+      <div class="row"><span><b>Date:</b> ${new Date().toLocaleDateString()}</span><span><span class="badge-paid">RECEIPT</span></span></div>
+      <hr>
+      <div class="row"><span><b>Name:</b></span> <span>${m.name}</span></div>
+      <div class="row"><span><b>Type:</b></span> <span>${seatOrTypeText}</span></div>
+      <div class="row"><span><b>Phone:</b></span> <span>${m.phone || '-'}</span></div>
+      <div class="row"><span><b>Rate:</b></span> <span>${money(defaultFee)}</span></div>
+      <hr>
+      <div class="row"><span><b>Paid Months:</b></span> <span style="text-align:right; max-width:200px;">${monthsText}</span></div>
+      <div class="row" style="font-size:15px; margin-top:10px;"><span><b>Total Paid:</b></span> <span style="color:#16a34a; font-weight:800;">${money(totalPaidAmount)}</span></div>
+      <hr>
+      <div class="footer"><p>Thank you for choosing Shreeji Library!</p></div>
+    </div>
+    <script>window.print();<\/script></body></html>
+  `);
+}
+
+function deleteMember(id){
+  const m=members.find(x=>x.id===id);if(!m)return;
+  if(!confirm(`Delete ${m.name}?`))return;
+  members=members.filter(x=>x.id!==id);save();render();toast("Member deleted");
+}
+
+function exportData(){
+  const blob=new Blob([JSON.stringify({app:"Shreeji Library Manager",version:12,exportedAt:new Date().toISOString(),members},null,2)],{type:"application/json"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="shreeji-library-backup-"+new Date().toISOString().slice(0,10)+".json";a.click();URL.revokeObjectURL(a.href);toast("Backup downloaded");
+}
+
+function importData(e){
+  const file=e.target.files[0];if(!file)return;
+  const reader=new FileReader();reader.onload=()=>{
+    try{const data=JSON.parse(reader.result);const arr=Array.isArray(data)?data:data.members;
+      if(!Array.isArray(arr))throw Error();
+      if(!confirm("Restore backup and replace current data?"))return;
+      members=arr.filter(m=>m&&m.name).map(m=>({...m,id:m.id||uid(),payments:m.payments||{}}));
+      save();render();toast("Backup restored");
+    }catch(err){alert("Invalid backup file.");}
+    e.target.value="";
+  };reader.readAsText(file);
+}
+
+function clearAll(){if(!members.length){toast("No data");return}if(confirm("Warning: All data will be deleted!")){members=[];save();render();toast("All data cleared")}}
+
+document.getElementById("modal").addEventListener("click",e=>{if(e.target.id==="modal")closeModal()});
+document.getElementById("reportModal").addEventListener("click",e=>{if(e.target.id==="reportModal")closeReportModal()});
+render();
+</script>
+</body>
+</html>
