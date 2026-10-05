@@ -58,7 +58,7 @@ h1{font-size:18px;margin:0 0 2px}.subtitle{font-size:11px;opacity:.8}
 .note{font-size:11px;color:var(--muted);margin-top:6px}
 </style>
 </head>
-<body>
+<body onclick="playBeep()">
 <header class="header">
   <div class="header-inner">
     <div><h1>📚 SHREEJI LIBRARY</h1><div class="subtitle">Seat & Fee Manager</div></div>
@@ -136,10 +136,7 @@ h1{font-size:18px;margin:0 0 2px}.subtitle{font-size:11px;opacity:.8}
           <div class="field full"><label>Note</label><input id="note" placeholder="Optional"></div>
           <div class="full" id="feeHistory"></div>
         </div>
-        <div class="modal-actions" id="modalButtons">
-          <button type="button" class="btn secondary" onclick="closeModal()">Cancel</button>
-          <button class="btn primary" type="submit">Save</button>
-        </div>
+        <div class="modal-actions" id="modalButtons"></div>
       </form>
     </div>
   </div>
@@ -160,10 +157,28 @@ h1{font-size:18px;margin:0 0 2px}.subtitle{font-size:11px;opacity:.8}
 
 <script>
 const TOTAL_SEATS=35;
-const KEY="shreeji_library_manager_v12";
+const KEY="shreeji_library_manager_v14";
 const MONTH_NAMES=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 let members=load();
 let activeYearMonth = currentKey();
+
+let audioCtx = null;
+function playBeep(){
+  try {
+    if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if(audioCtx.state === 'suspended') audioCtx.resume();
+    let osc = audioCtx.createOscillator();
+    let gain = audioCtx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.08);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.08);
+  } catch(e) {}
+}
 
 function load(){try{return JSON.parse(localStorage.getItem(KEY)||"[]")}catch(e){return[]}}
 function save(){localStorage.setItem(KEY,JSON.stringify(members))}
@@ -171,7 +186,18 @@ function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2
 function currentKey(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")}
 function money(n){return "₹"+Number(n||0).toLocaleString("en-IN")}
 function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
-function getMember(seat){return members.find(m=>m.type!=="unfixed" && Number(m.seat)===Number(seat))}
+
+function isMemberActiveInActiveMonth(m){
+  if(!m.joining) return true;
+  const joinParts = m.joining.split("-");
+  const joinYm = joinParts[0] + "-" + joinParts[1];
+  return activeYearMonth >= joinYm;
+}
+
+function getMember(seat){
+  return members.find(m => m.type !== "unfixed" && Number(m.seat) === Number(seat) && isMemberActiveInActiveMonth(m));
+}
+
 function isPaidForActive(m){return !!m?.payments?.[activeYearMonth]}
 function toast(msg){const t=document.getElementById("toast");t.textContent=msg;t.style.display="block";clearTimeout(window._toast);window._toast=setTimeout(()=>t.style.display="none",2200)}
 
@@ -205,6 +231,7 @@ function render(){
   let occupied=0,unfixedCount=0,paid=0,collection=0;
   
   members.forEach(m=>{
+    if(!isMemberActiveInActiveMonth(m)) return;
     const feeVal = Number(m.fee || (m.type==="unfixed"?900:1100));
     if(isPaidForActive(m)){
       paid++;
@@ -228,7 +255,7 @@ function render(){
     const m=getMember(s);
     const div=document.createElement("button");
     div.className=`seat ${m?"occupied":"empty"} ${m&&!isPaidForActive(m)?"pending":""}`;
-    div.onclick=()=>m?openDetails(m.id):openMemberModal(null,s);
+    div.onclick=()=> { playBeep(); m?openDetails(m.id):openMemberModal(null,s); };
     div.innerHTML=`
       <div class="seatno">Seat ${s}</div>
       <div class="seatname" title="${m?esc(m.name):''}">${m?esc(m.name):"Empty"}</div>
@@ -239,7 +266,8 @@ function render(){
   }
 
   const rows=document.getElementById("memberRows"); rows.innerHTML="";
-  const sorted=[...members].sort((a,b)=>{
+  const activeMembers = members.filter(m => isMemberActiveInActiveMonth(m));
+  const sorted=[...activeMembers].sort((a,b)=>{
     if(a.type==="unfixed" && b.type!=="unfixed") return 1;
     if(a.type!=="unfixed" && b.type==="unfixed") return -1;
     return Number(a.seat||0)-Number(b.seat||0);
@@ -263,35 +291,31 @@ function render(){
     if(m.phone){
       let msg = "";
       const defaultFee = money(m.fee || (m.type==="unfixed"?900:1100));
-      let seatText = m.type==="unfixed" ? "અનફિક્સ સભ્ય" : `સીટ નં: ${m.seat}`;
 
       if(isPaidForActive(m)){
-        // Smart Receipt Message for WhatsApp when paid
-        msg = encodeURIComponent(`📚 *શ્રીજી લાઈબ્રેરી - ફી પહોંચ (Receipt)*\n-----------------------------------\n*નામ:* ${m.name}\n*પ્રકાર:* ${seatOrTypeTextName(m)}\n*મહિનો:* ${monthNiceName}\n*ભરેલી રકમ:* ${defaultFee}\n*સ્ટેટસ:* ✓ ફી ભરેલ (Paid)\n-----------------------------------\nધন্যবাদ! શ્રીજી લાઈબ્રેરી મેનેજમેન્ટ`);
+        // Paid Receipt Format
+        msg = encodeURIComponent(`📚 *શ્રીજી લાઈબ્રેરી - ફી પહોંચ (Receipt)*\n-----------------------------------\n*નામ:* ${m.name}\n*પ્રકાર:* ${(m.type==="unfixed"?"Unfixed Member":"Seat "+m.seat)}\n*મહિનો:* ${monthNiceName}\n*ભરેલી રકમ:* ${defaultFee}\n*સ્ટેટસ:* ✓ ફી ભરેલ (Paid)\n-----------------------------------\nધન્યવાદ! શ્રીજી લાઈબ્રેરી મેનેજમેન્ટ\n*“જ્યાં મહેનતને મળે સફળતાનું સરનામું.”*`);
       } else {
-        // Pending Reminder Message when unpaid
-        msg = encodeURIComponent(`નમસ્તે ${m.name}, શ્રીજી લાઈબ્રેરી (${seatText}) તરફથી યાદ અપાવવાનું કે આપની આ મહિનાની ફી ${defaultFee} બાકી છે. કૃપા કરીને સમયસર ફી ભરી જવા વિનંતી છે, જેથી આપનું સીટ કન્ફર્મ રહે. ધન્યવાદ!\nશ્રીજી લાઈબ્રેરી મેનેજમેન્ટ`);
+        // Fee Reminder Format
+        let seatText = m.type==="unfixed" ? "અનફિક્સ" : `1`;
+        msg = encodeURIComponent(`*📚 શ્રીજી લાઈબ્રેરી – ફી રિમાઇન્ડર*\n━━━━━━━━━━━━━━━━━\n\n🙏 નમસ્તે\n${m.name},\n\n🪑 સીટ નં.: ${m.type==="unfixed"?"Unfixed":m.seat}\n💰 બાકી ફી: ${defaultFee}\n📅 મહિનો: ${monthNiceName}\n\nઆપની આ મહિનાની લાઈબ્રેરી ફી ${defaultFee} બાકી છે.\nકૃપા કરીને શક્ય તેટલી વહેલી તકે ફી ભરી આપવા વિનંતી છે, જેથી આપનું સીટ રિઝર્વેશન સતત ચાલુ રહી શકે.\n━━━━━━━━━━━━━━━━━\n🙏 આપના સહકાર બદલ આભાર.\n\n– શ્રીજી લાઈબ્રેરી મેનેજમેન્ટ\n*“જ્યાં મહેનતને મળે સફળતાનું સરનામું.”*`);
       }
-      waBtn = `<button class="small whatsapp" onclick="window.open('https://wa.me/91${m.phone}?text=${msg}')">WA</button>`;
+      waBtn = `<button class="small whatsapp" onclick="playBeep(); window.open('https://wa.me/91${m.phone}?text=${msg}')">WA</button>`;
     }
     
     tr.innerHTML=`<td><b>${typeBadge}</b></td><td><b>${esc(m.name)}</b></td><td>${esc(m.phone||"-")}</td><td>${money(m.fee || (m.type==="unfixed"?900:1100))}</td>
       <td><span class="badge ${isPaidForActive(m)?"paid":"pending-b"}">${isPaidForActive(m)?"✓ Paid":"Pending"}</span></td>
       <td>${esc(m.joining||"-")}</td>
       <td><div class="actions">
-        <button class="small ${isPaidForActive(m)?"red":"green"}" onclick="toggleActivePayment('${m.id}')">${isPaidForActive(m)?"Undo":"Paid"}</button>
-        <button class="small secondary" onclick="openMemberModal('${m.id}')">Edit</button>
-        <button class="small dark" onclick="openDetails('${m.id}')">Fees</button>
+        <button class="small ${isPaidForActive(m)?"red":"green"}" onclick="playBeep(); toggleActivePayment('${m.id}')">${isPaidForActive(m)?"Undo":"Paid"}</button>
+        <button class="small secondary" onclick="playBeep(); openMemberModal('${m.id}')">Edit</button>
+        <button class="small dark" onclick="playBeep(); openDetails('${m.id}')">Fees</button>
         ${waBtn}
-        <button class="small red" onclick="deleteMember('${m.id}')">Del</button>
+        <button class="small red" onclick="playBeep(); deleteMember('${m.id}')">Del</button>
       </div></td>`;
     rows.appendChild(tr);
   });
-  if(!filtered.length)rows.innerHTML='<tr><td colspan="7" class="empty-state">No members found.</td></tr>';
-}
-
-function seatOrTypeTextName(m){
-  return m.type==="unfixed" ? "Unfixed Member" : "Seat " + m.seat;
+  if(!filtered.length)rows.innerHTML='<tr><td colspan="7" class="empty-state">No members found for this month.</td></tr>';
 }
 
 function fillSeats(selected){
@@ -304,6 +328,7 @@ function fillSeats(selected){
 }
 
 function openMemberModal(id=null,preSeat=null){
+  playBeep();
   document.getElementById("modal").style.display="block";
   document.getElementById("modalTitle").textContent=id?"Edit Member":"Add Member";
   document.getElementById("editId").value=id||"";
@@ -325,14 +350,30 @@ function openMemberModal(id=null,preSeat=null){
   document.getElementById("feeHistory").innerHTML=m?feeHistoryHTML(m):"<p style='font-size:11px;color:gray;margin-top:6px;'>Advance or past fees can be managed after saving.</p>";
   
   let btnContainer = document.getElementById("modalButtons");
-  btnContainer.innerHTML = `<button type="button" class="btn secondary" onclick="closeModal()">Cancel</button><button class="btn primary" type="submit">Save</button>`;
+  btnContainer.innerHTML = `<button type="button" class="btn secondary" onclick="playBeep(); closeModal()">Cancel</button>`;
+  if(id){
+    btnContainer.innerHTML += `<button type="button" class="btn red" onclick="playBeep(); clearThisSeat('${id}')">🗑 Clear This Seat</button>`;
+  }
+  btnContainer.innerHTML += `<button class="btn primary" type="submit" onclick="playBeep()">Save</button>`;
   if(m){
-    btnContainer.innerHTML += `<button type="button" class="btn orange" onclick="printReceipt('${m.id}')">🖨 Receipt</button>`;
+    btnContainer.innerHTML += `<button type="button" class="btn orange" onclick="playBeep(); printReceipt('${m.id}')">🖨 Receipt</button>`;
   }
 }
 
 function closeModal(){document.getElementById("modal").style.display="none"}
 function closeReportModal(){document.getElementById("reportModal").style.display="none"}
+
+function clearThisSeat(id){
+  const m=members.find(x=>x.id===id);
+  if(!m) return;
+  if(confirm(`Are you sure you want to clear/remove ${m.name}?`)){
+    members = members.filter(x => x.id !== id);
+    save();
+    closeModal();
+    render();
+    toast("Seat cleared successfully");
+  }
+}
 
 function saveMember(e){
   e.preventDefault();
@@ -341,8 +382,8 @@ function saveMember(e){
   const seat=type==="fixed"?Number(document.getElementById("seat").value):null;
   
   if(type==="fixed"){
-    const duplicate=members.find(m=>m.type!=="unfixed" && Number(m.seat)===seat&&m.id!==id);
-    if(duplicate){toast("That seat is already occupied!");return}
+    const duplicate=members.find(m=>m.type!=="unfixed" && Number(m.seat)===seat && m.id!==id && isMemberActiveInActiveMonth(m));
+    if(duplicate){toast("That seat is already occupied for this month!");return}
   }
 
   const old=id?members.find(x=>x.id===id):null;
@@ -378,7 +419,7 @@ function setPayment(id,key){
 function feeHistoryHTML(m){
   const y=new Date().getFullYear();let out=`<div style="margin-top:10px"><b>12-Month Fee Tracking — ${y}</b><div class="fee-grid">`;
   for(let i=0;i<12;i++){const key=y+"-"+String(i+1).padStart(2,"0"),paid=!!m.payments?.[key];
-    out+=`<div class="month"><strong>${MONTH_NAMES[i]}</strong><div class="mrow"><span class="badge ${paid?"paid":"pending-b"}">${paid?"PAID":"PEND"}</span><button class="${paid?"red":"green"}" onclick="setPayment('${m.id}','${key}')">${paid?"Undo":"Paid"}</button></div></div>`;
+    out+=`<div class="month"><strong>${MONTH_NAMES[i]}</strong><div class="mrow"><span class="badge ${paid?"paid":"pending-b"}">${paid?"PAID":"PEND"}</span><button class="${paid?"red":"green"}" onclick="playBeep(); setPayment('${m.id}','${key}')">${paid?"Undo":"Paid"}</button></div></div>`;
   }return out+"</div></div>";
 }
 
@@ -388,6 +429,7 @@ function openDetails(id){
 }
 
 function openMonthlyReportModal(){
+  playBeep();
   document.getElementById("reportModal").style.display="block";
   const [yStr, mStr] = activeYearMonth.split("-");
   const curMonthName = MONTH_NAMES[parseInt(mStr, 10)-1] + " " + yStr;
@@ -397,6 +439,7 @@ function openMonthlyReportModal(){
   let totalCollection = 0;
 
   members.forEach(m => {
+    if(!isMemberActiveInActiveMonth(m)) return;
     const feeVal = Number(m.fee || (m.type==="unfixed"?900:1100));
     if(m.payments && m.payments[activeYearMonth]){
       paidMembersList.push(m);
@@ -418,7 +461,7 @@ function openMonthlyReportModal(){
         <h3 style="margin:0; color:#0f172a; font-size:15px;">Report: ${curMonthName}</h3>
         <p style="margin:2px 0 0; font-size:11px; color:#64748b;">Shreeji Library Summary</p>
       </div>
-      <button class="btn primary" style="padding:6px 10px; font-size:12px;" onclick="printMonthlyReport()">🖨 Print</button>
+      <button class="btn primary" style="padding:6px 10px; font-size:12px;" onclick="playBeep(); printMonthlyReport()">🖨 Print</button>
     </div>
     
     <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px;">
@@ -453,6 +496,7 @@ function printMonthlyReport(){
   let totalCollection = 0;
 
   members.forEach(m => {
+    if(!isMemberActiveInActiveMonth(m)) return;
     const feeVal = Number(m.fee || (m.type==="unfixed"?900:1100));
     if(m.payments && m.payments[activeYearMonth]){
       paidMembersList.push(m);
@@ -528,7 +572,7 @@ function deleteMember(id){
 }
 
 function exportData(){
-  const blob=new Blob([JSON.stringify({app:"Shreeji Library Manager",version:12,exportedAt:new Date().toISOString(),members},null,2)],{type:"application/json"});
+  const blob=new Blob([JSON.stringify({app:"Shreeji Library Manager",version:14,exportedAt:new Date().toISOString(),members},null,2)],{type:"application/json"});
   const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="shreeji-library-backup-"+new Date().toISOString().slice(0,10)+".json";a.click();URL.revokeObjectURL(a.href);toast("Backup downloaded");
 }
 
