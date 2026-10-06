@@ -4,21 +4,68 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#0f172a">
-<title>Shreeji Library - Seat & Fee Manager</title>
+<title>Shreeji Library - Multi-Room Manager</title>
 <style>
 :root{
-  --bg:#f1f5f9;--card:#fff;--text:#0f172a;--muted:#64748b;
+  --bg:#f8fafc;--card:#fff;--text:#0f172a;--muted:#64748b;
   --primary:#2563eb;--primary2:#1d4ed8;--green:#16a34a;--red:#dc2626;
-  --amber:#d97706;--border:#e2e8f0;--shadow:0 4px 15px rgba(15,23,42,.06);
+  --amber:#d97706;--border:#e2e8f0;--shadow:0 10px 30px rgba(15,23,42,.08);
 }
 *{box-sizing:border-box}
 body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text);padding-bottom:30px}
 button,input,select{font:inherit}
 button{cursor:pointer;border:0}
-.header{background:linear-gradient(135deg,#0f172a,#1e3a8a);color:white;padding:14px 12px;position:sticky;top:0;z-index:20;box-shadow:0 3px 10px rgba(0,0,0,0.2)}
-.header-inner{max-width:1200px;margin:auto;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
-h1{font-size:18px;margin:0 0 2px}.subtitle{font-size:11px;opacity:.8}
-.container{max-width:1200px;margin:auto;padding:12px}
+
+/* Neon Glowing/Blinking Header Theme */
+.sticky-header{
+  background:linear-gradient(135deg,#090d16,#1e293b);color:white;
+  padding:20px 16px;position:sticky;top:0;z-index:30;
+  box-shadow:0 4px 20px rgba(0,0,0,0.3);
+  display:flex;flex-direction:column;align-items:center;gap:12px;
+  border-bottom:3px solid #06b6d4;
+}
+.header-top{text-align:center}
+.header-top h2{
+  margin:0;font-size:28px;letter-spacing:1px;font-weight:900;
+  animation: neonGlow 0.6s infinite alternate;
+}
+@keyframes neonGlow {
+  0% { text-shadow: 0 0 5px rgba(6,182,212,0.4), 0 0 10px rgba(6,182,212,0.2); color: #ffffff; }
+  100% { text-shadow: 0 0 20px rgba(6,182,212,1), 0 0 35px rgba(59,130,246,0.8); color: #67e8f9; }
+}
+.header-top .tagline{
+  margin:4px 0 0;font-size:12px;color:#cbd5e1;font-style:italic;
+  position:relative;display:inline-block;padding-bottom:4px;
+}
+.header-top .tagline::after {
+  content: ''; position: absolute; left: 0; bottom: 0; width: 100%; height: 2px;
+  background: linear-gradient(90deg, transparent, #06b6d4, transparent);
+}
+
+.header-bottom{display:flex;justify-content:center;align-items:center;gap:8px;flex-wrap:wrap;width:100%}
+
+.container{max-width:1200px;margin:auto;padding:16px}
+
+/* Smaller & Compact Colorful Rooms Grid */
+.rooms-grid{display:grid;grid-template-columns:1fr;gap:14px;margin-top:15px;margin-bottom:25px}
+@media(min-width:768px){.rooms-grid{grid-template-columns:repeat(3,1fr)}}
+
+.room-card{color:white;border-radius:16px;padding:18px;box-shadow:0 10px 25px rgba(0,0,0,0.12);text-align:left;transition:.2s;cursor:pointer;position:relative;overflow:hidden}
+.room-card:nth-child(1){background:linear-gradient(135deg,#0284c7,#0369a1)}
+.room-card:nth-child(2){background:linear-gradient(135deg,#059669,#047857)}
+.room-card:nth-child(3){background:linear-gradient(135deg,#d97706,#b45309)}
+.room-card:hover{transform:translateY(-3px);box-shadow:0 14px 30px rgba(0,0,0,0.18)}
+.room-card h3{margin:0 0 4px;font-size:20px;font-weight:800}
+.room-card .badge-cap{display:inline-block;background:rgba(255,255,255,0.2);color:white;font-size:11px;font-weight:700;padding:3px 8px;border-radius:6px;margin-bottom:10px}
+.room-stats{display:flex;justify-content:space-between;margin-top:12px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.25);font-size:12px;font-weight:bold}
+
+/* Footer Developer Tag at bottom */
+.developer-tag{
+  text-align:center;padding:16px;color:#64748b;font-size:12px;font-weight:700;
+  margin-top:40px;border-top:1px solid #e2e8f0;background:#fff;border-radius:12px;
+  box-shadow:0 2px 10px rgba(0,0,0,0.02);
+}
+
 .stats{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:12px}
 @media(min-width:768px){.stats{grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:14px}}
 .stat{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px;box-shadow:var(--shadow)}
@@ -59,57 +106,109 @@ h1{font-size:18px;margin:0 0 2px}.subtitle{font-size:11px;opacity:.8}
 </style>
 </head>
 <body>
-<header class="header">
-  <div class="header-inner">
-    <div><h1>📚 SHREEJI LIBRARY</h1><div class="subtitle">Seat & Fee Manager</div></div>
-    <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
-      <div style="background:#1e293b;padding:4px 8px;border-radius:6px;display:flex;align-items:center;gap:4px;">
-        <span style="font-size:11px;color:#94a3b8;">Month:</span>
-        <input type="month" id="globalMonthPicker" style="padding:2px 4px;font-size:12px;background:white;border:none;border-radius:4px;" onchange="playHardBeep(); changeActiveMonth()">
+
+<!-- HOME PAGE VIEW -->
+<div id="homeView">
+  <!-- Sticky Header for Home -->
+  <header class="sticky-header">
+    <div class="header-top">
+      <h2>📚 SHREEJI LIBRARY</h2>
+      <div class="tagline">જ્યાં મહેનતને મળે સફળતાનું સરનામું.</div>
+    </div>
+    <div class="header-bottom">
+      <input type="month" id="homeMonthPicker" style="padding:5px 8px;font-size:12px;background:white;border:none;border-radius:6px;outline:none;" onchange="playHardBeep(); changeHomeMonth()">
+      <button class="btn purple" style="padding:6px 10px; font-size:12px;" onclick="playHardBeep(); openAllRoomsReportModal()">📊 Report</button>
+      <button class="btn green" style="padding:6px 10px; font-size:12px;" onclick="playHardBeep(); exportData()">⬇ Backup</button>
+      <button class="btn orange" style="padding:6px 10px; font-size:12px;" onclick="playHardBeep(); document.getElementById('fileInput').click()">⬆ Restore</button>
+      <input id="fileInput" type="file" accept=".json" style="display:none" onchange="importData(event)">
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="rooms-grid" style="margin-top:15px;">
+      <div class="room-card" onclick="playHardBeep(); selectRoom(1)">
+        <h3>🏛 Library 1</h3>
+        <span class="badge-cap">Seats 1 to 40</span>
+        <div class="room-stats">
+          <span id="homeLib1Occupied">Occupied: 0/40</span>
+          <span id="homeLib1Coll">₹0</span>
+        </div>
       </div>
-      <button class="btn purple" style="padding:6px 10px;font-size:12px;" onclick="playHardBeep(); openMonthlyReportModal()">📊 Report</button>
-      <button class="btn primary" style="padding:6px 10px;font-size:12px;" onclick="playHardBeep(); openMemberModal()">＋ Add</button>
+      <div class="room-card" onclick="playHardBeep(); selectRoom(2)">
+        <h3>🏛 Library 2</h3>
+        <span class="badge-cap">Seats 41 to 66</span>
+        <div class="room-stats">
+          <span id="homeLib2Occupied">Occupied: 0/26</span>
+          <span id="homeLib2Coll">₹0</span>
+        </div>
+      </div>
+      <div class="room-card" onclick="playHardBeep(); selectRoom(3)">
+        <h3>🏛 Library 3</h3>
+        <span class="badge-cap">Seats 67 to 185</span>
+        <div class="room-stats">
+          <span id="homeLib3Occupied">Occupied: 0/119</span>
+          <span id="homeLib3Coll">₹0</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="developer-tag">
+      ⚡ Designed & Developed by Sid Ahir
     </div>
   </div>
-</header>
+</div>
 
-<main class="container">
-  <div class="stats">
-    <div class="stat"><div class="label">Total Seats</div><div class="num" id="totalSeats">35</div></div>
-    <div class="stat"><div class="label">Fixed Occupied</div><div class="num" id="occupied">0</div></div>
-    <div class="stat"><div class="label">Empty Seats</div><div class="num" id="empty">35</div></div>
-    <div class="stat"><div class="label">Unfixed Members</div><div class="num" id="unfixedCount">0</div></div>
-    <div class="stat"><div class="label">Paid (<span id="activeMonthLabel"></span>)</div><div class="num" id="paidCount">0</div></div>
-    <div class="stat"><div class="label">Collection (<span id="activeMonthLabel2"></span>)</div><div class="num" id="collection">₹0</div></div>
-  </div>
-
-  <div class="toolbar">
-    <input id="search" placeholder="🔎 Search name / phone / seat..." oninput="render()">
-    <select id="statusFilter" onchange="playHardBeep(); render()">
-      <option value="all">All Members</option><option value="fixed">Fixed Seat (₹1100)</option><option value="unfixed">Unfixed (₹900)</option><option value="paid">Paid</option><option value="pending">Pending</option>
-    </select>
-    <button class="btn green" onclick="playHardBeep(); exportData()">⬇ Backup</button>
-    <button class="btn orange" onclick="playHardBeep(); document.getElementById('fileInput').click()">⬆ Restore</button>
-    <button class="btn red" onclick="playHardBeep(); clearAll()">🗑 Clear</button>
-    <input id="fileInput" type="file" accept=".json" style="display:none" onchange="importData(event)">
-  </div>
-
-  <section class="section">
-    <div class="section-title">
-      <h2>🪑 Seat Layout (35 Fixed Seats)</h2>
-      <div class="legend"><span><i class="dot dg"></i>Paid</span><span><i class="dot dr"></i>Pending</span><span><i class="dot de"></i>Empty</span></div>
+<!-- ROOM MANAGEMENT VIEW (Hidden by default) -->
+<div id="roomView" style="display:none;">
+  <!-- Sticky Header for Room -->
+  <header class="sticky-header">
+    <div class="header-top">
+      <h2 id="roomHeaderTitle">📚 LIBRARY</h2>
+      <div class="tagline">જ્યાં મહેનતને મળે સફળતાનું સરનામું.</div>
     </div>
-    <div id="seats" class="seats"></div>
-  </section>
+    <div class="header-bottom">
+      <button class="btn secondary" style="padding:5px 10px; font-size:12px;" onclick="playHardBeep(); goToHome()">🏠 Home</button>
+      <input type="month" id="globalMonthPicker" style="padding:5px 8px;font-size:12px;background:white;border:none;border-radius:6px;outline:none;" onchange="playHardBeep(); changeActiveMonth()">
+      <button class="btn purple" style="padding:5px 10px; font-size:12px;" onclick="playHardBeep(); openMonthlyReportModal()">📊 Report</button>
+      <button class="btn primary" style="padding:5px 10px; font-size:12px;" onclick="playHardBeep(); openMemberModal()">＋ Add</button>
+    </div>
+  </header>
 
-  <section class="section">
-    <div class="section-title"><h2>👥 Members List</h2><span class="note">Manage all members</span></div>
-    <div class="table-wrap"><table class="members-table">
-      <thead><tr><th>Type</th><th>Name</th><th>Phone</th><th>Fee</th><th>Status</th><th>Joining</th><th>Actions</th></tr></thead>
-      <tbody id="memberRows"></tbody>
-    </table></div>
-  </section>
-</main>
+  <main class="container">
+    <div class="stats">
+      <div class="stat"><div class="label">Total Room Seats</div><div class="num" id="totalSeats">0</div></div>
+      <div class="stat"><div class="label">Fixed Occupied</div><div class="num" id="occupied">0</div></div>
+      <div class="stat"><div class="label">Empty Seats</div><div class="num" id="empty">0</div></div>
+      <div class="stat"><div class="label">Unfixed Members</div><div class="num" id="unfixedCount">0</div></div>
+      <div class="stat"><div class="label">Paid (<span id="activeMonthLabel"></span>)</div><div class="num" id="paidCount">0</div></div>
+      <div class="stat"><div class="label">Collection (<span id="activeMonthLabel2"></span>)</div><div class="num" id="collection">₹0</div></div>
+    </div>
+
+    <div class="toolbar">
+      <input id="search" placeholder="🔎 Search name / phone / seat..." oninput="render()">
+      <select id="statusFilter" onchange="playHardBeep(); render()">
+        <option value="all">All Members</option><option value="fixed">Fixed Seat (₹1100)</option><option value="unfixed">Unfixed (₹900)</option><option value="paid">Paid</option><option value="pending">Pending</option>
+      </select>
+      <button class="btn red" onclick="playHardBeep(); clearRoomData()">🗑 Clear Room Data</button>
+    </div>
+
+    <section class="section">
+      <div class="section-title">
+        <h2 id="seatLayoutTitle">🪑 Seat Layout</h2>
+        <div class="legend"><span><i class="dot dg"></i>Paid</span><span><i class="dot dr"></i>Pending</span><span><i class="dot de"></i>Empty</span></div>
+      </div>
+      <div id="seats" class="seats"></div>
+    </section>
+
+    <section class="section">
+      <div class="section-title"><h2>👥 Members List</h2><span class="note">Manage all members</span></div>
+      <div class="table-wrap"><table class="members-table">
+        <thead><tr><th>Type</th><th>Name</th><th>Phone</th><th>Fee</th><th>Status</th><th>Joining</th><th>Actions</th></tr></thead>
+        <tbody id="memberRows"></tbody>
+      </table></div>
+    </section>
+  </main>
+</div>
 
 <!-- Member Modal -->
 <div id="modal" class="overlay">
@@ -156,33 +255,43 @@ h1{font-size:18px;margin:0 0 2px}.subtitle{font-size:11px;opacity:.8}
 <div id="toast" class="toast"></div>
 
 <script>
-const TOTAL_SEATS=35;
-const KEY="shreeji_library_manager_v20";
+// INTEGRITY & SECURITY CHECK
+(function(){
+  const checkName1 = "SHREEJI LIBRARY";
+  const checkName2 = "Sid Ahir";
+  setTimeout(() => {
+    if(!document.body.innerHTML.includes(checkName1) && !document.body.innerHTML.includes("Library")) {
+      document.body.innerHTML = "<h1 style='color:red;text-align:center;margin-top:20vh;'>CRITICAL ERROR: Unauthorized code modification detected! File crashed.</h1>";
+      throw new Error("Integrity check failed");
+    }
+  }, 1000);
+})();
+
+const KEY="shreeji_library_manager_v28";
 const MONTH_NAMES=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 let members=load();
+let currentRoomId = 1;
 let activeYearMonth = currentKey();
+
+const ROOM_CONFIG = {
+  1: { name: "Library 1", start: 1, end: 40 },
+  2: { name: "Library 2", start: 41, end: 66 },
+  3: { name: "Library 3", start: 67, end: 185 }
+};
 
 let audioCtx = null;
 function playHardBeep() {
   try {
-    if (!audioCtx) {
-      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    }
-    if (audioCtx.state === 'suspended') {
-      audioCtx.resume();
-    }
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
     let osc = audioCtx.createOscillator();
     let gain = audioCtx.createGain();
-    
     osc.type = 'square';
     osc.frequency.setValueAtTime(1800, audioCtx.currentTime);
-    
     gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.08);
-    
     osc.connect(gain);
     gain.connect(audioCtx.destination);
-    
     osc.start();
     osc.stop(audioCtx.currentTime + 0.08);
   } catch(e) {}
@@ -195,6 +304,11 @@ function currentKey(){const d=new Date();return d.getFullYear()+"-"+String(d.get
 function money(n){return "₹"+Number(n||0).toLocaleString("en-IN")}
 function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
 
+function getRoomSeatsCount(roomId){
+  const cfg = ROOM_CONFIG[roomId];
+  return cfg.end - cfg.start + 1;
+}
+
 function isMemberActiveInActiveMonth(m){
   if(!m.joining) return true;
   const joinParts = m.joining.split("-");
@@ -202,18 +316,169 @@ function isMemberActiveInActiveMonth(m){
   return activeYearMonth >= joinYm;
 }
 
+function getRoomMembers(){
+  return members.filter(m => Number(m.roomId) === Number(currentRoomId));
+}
+
 function getMember(seat){
-  return members.find(m => m.type !== "unfixed" && Number(m.seat) === Number(seat) && isMemberActiveInActiveMonth(m));
+  return getRoomMembers().find(m => m.type !== "unfixed" && Number(m.seat) === Number(seat) && isMemberActiveInActiveMonth(m));
 }
 
 function isPaidForActive(m){return !!m?.payments?.[activeYearMonth]}
 function toast(msg){const t=document.getElementById("toast");t.textContent=msg;t.style.display="block";clearTimeout(window._toast);window._toast=setTimeout(()=>t.style.display="none",2200)}
 
+document.getElementById("homeMonthPicker").value = activeYearMonth;
 document.getElementById("globalMonthPicker").value = activeYearMonth;
+
+function changeHomeMonth(){
+  activeYearMonth = document.getElementById("homeMonthPicker").value;
+  document.getElementById("globalMonthPicker").value = activeYearMonth;
+  updateHomeStats();
+}
 
 function changeActiveMonth(){
   activeYearMonth = document.getElementById("globalMonthPicker").value;
+  document.getElementById("homeMonthPicker").value = activeYearMonth;
   render();
+}
+
+function updateHomeStats(){
+  for(let r=1; r<=3; r++){
+    const roomMembers = members.filter(m => Number(m.roomId) === Number(r));
+    let occupied = 0, collection = 0;
+    const cfg = ROOM_CONFIG[r];
+    roomMembers.forEach(m => {
+      if(!isMemberActiveInActiveMonth(m)) return;
+      const feeVal = Number(m.fee || (m.type==="unfixed"?900:1100));
+      if(m.payments && m.payments[activeYearMonth]) collection += feeVal;
+      if(m.type !== "unfixed") occupied++;
+    });
+    const totalSeatsInRoom = cfg.end - cfg.start + 1;
+    document.getElementById(`homeLib${r}Occupied`).textContent = `Occupied: ${occupied}/${totalSeatsInRoom}`;
+    document.getElementById(`homeLib${r}Coll`).textContent = money(collection);
+  }
+}
+
+function selectRoom(roomId){
+  currentRoomId = roomId;
+  document.getElementById("homeView").style.display = "none";
+  document.getElementById("roomView").style.display = "block";
+  const cfg = ROOM_CONFIG[roomId];
+  document.getElementById("roomHeaderTitle").textContent = `📚 ${cfg.name}`;
+  render();
+}
+
+function goToHome(){
+  document.getElementById("roomView").style.display = "none";
+  document.getElementById("homeView").style.display = "block";
+  updateHomeStats();
+}
+
+function openAllRoomsReportModal(){
+  playHardBeep();
+  document.getElementById("reportModal").style.display="block";
+  const [yStr, mStr] = activeYearMonth.split("-");
+  const curMonthName = MONTH_NAMES[parseInt(mStr, 10)-1] + " " + yStr;
+
+  let totalPaidCount = 0;
+  let totalCollAmt = 0;
+  let combinedPaidHtml = "";
+  let combinedPendingHtml = "";
+
+  for(let r=1; r<=3; r++){
+    const cfg = ROOM_CONFIG[r];
+    const roomMembers = members.filter(m => Number(m.roomId) === Number(r));
+    
+    roomMembers.forEach(m => {
+      if(!isMemberActiveInActiveMonth(m)) return;
+      const feeVal = Number(m.fee || (m.type==="unfixed"?900:1100));
+      const seatTypeLabel = m.type==="unfixed" ? "Unfixed" : "Seat "+m.seat;
+      
+      if(m.payments && m.payments[activeYearMonth]){
+        totalPaidCount++;
+        totalCollAmt += feeVal;
+        combinedPaidHtml += `<tr><td><b>${cfg.name}</b></td><td>${seatTypeLabel}</td><td><b>${esc(m.name)}</b></td><td>${esc(m.phone||'-')}</td><td style="color:#16a34a; font-weight:bold;">${money(feeVal)}</td></tr>`;
+      } else {
+        combinedPendingHtml += `<tr><td><b>${cfg.name}</b></td><td>${seatTypeLabel}</td><td><b>${esc(m.name)}</b></td><td>${esc(m.phone||'-')}</td><td style="color:#dc2626; font-weight:bold;">Pending</td></tr>`;
+      }
+    });
+  }
+
+  if(!combinedPaidHtml) combinedPaidHtml = '<tr><td colspan="5" class="empty-state">No paid members across all libraries yet.</td></tr>';
+  if(!combinedPendingHtml) combinedPendingHtml = '<tr><td colspan="5" class="empty-state">No pending members across all libraries!</td></tr>';
+
+  document.getElementById("reportModalBody").innerHTML = `
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:8px;">
+      <div>
+        <h3 style="margin:0; color:#0f172a; font-size:15px;">All Libraries Report: ${curMonthName}</h3>
+        <p style="margin:2px 0 0; font-size:11px; color:#64748b;">Shreeji Library Combined Summary</p>
+      </div>
+      <button class="btn primary" style="padding:6px 10px; font-size:12px;" onclick="playHardBeep(); printAllRoomsReport()">🖨 Print Combined Report</button>
+    </div>
+    
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px;">
+      <div style="background:#f8fafc; border:1px solid #e2e8f0; padding:10px; border-radius:8px;">
+        <div style="font-size:11px; color:#64748b;">Total Paid (All Rooms)</div>
+        <div style="font-size:16px; font-weight:800; color:#16a34a; margin-top:2px;">${totalPaidCount} Members</div>
+      </div>
+      <div style="background:#f8fafc; border:1px solid #e2e8f0; padding:10px; border-radius:8px;">
+        <div style="font-size:11px; color:#64748b;">Total Collection (All Rooms)</div>
+        <div style="font-size:16px; font-weight:800; color:#2563eb; margin-top:2px;">${money(totalCollAmt)}</div>
+      </div>
+    </div>
+
+    <h4 style="margin:10px 0 6px; font-size:13px; color:#16a34a;">✓ Paid List (All Libraries)</h4>
+    <div class="table-wrap" style="max-height:150px; overflow-y:auto; border:1px solid #e2e8f0; border-radius:6px;">
+      <table class="members-table"><thead><tr><th>Library</th><th>Type</th><th>Name</th><th>Phone</th><th>Amount</th></tr></thead><tbody>${combinedPaidHtml}</tbody></table>
+    </div>
+
+    <h4 style="margin:10px 0 6px; font-size:13px; color:#dc2626;">! Pending List (All Libraries)</h4>
+    <div class="table-wrap" style="max-height:150px; overflow-y:auto; border:1px solid #e2e8f0; border-radius:6px;">
+      <table class="members-table"><thead><tr><th>Library</th><th>Type</th><th>Name</th><th>Phone</th><th>Status</th></tr></thead><tbody>${combinedPendingHtml}</tbody></table>
+    </div>
+  `;
+}
+
+function printAllRoomsReport(){
+  const [yStr, mStr] = activeYearMonth.split("-");
+  const curMonthName = MONTH_NAMES[parseInt(mStr, 10)-1] + " " + yStr;
+  
+  let totalPaidCount = 0;
+  let totalCollAmt = 0;
+  let combinedPaidRows = "";
+  let combinedPendingRows = "";
+
+  for(let r=1; r<=3; r++){
+    const cfg = ROOM_CONFIG[r];
+    const roomMembers = members.filter(m => Number(m.roomId) === Number(r));
+    
+    roomMembers.forEach(m => {
+      if(!isMemberActiveInActiveMonth(m)) return;
+      const feeVal = Number(m.fee || (m.type==="unfixed"?900:1100));
+      const seatTypeLabel = m.type==="unfixed" ? "Unfixed" : "Seat "+m.seat;
+      
+      if(m.payments && m.payments[activeYearMonth]){
+        totalPaidCount++;
+        totalCollAmt += feeVal;
+        combinedPaidRows += `<tr><td>${cfg.name}</td><td>${seatTypeLabel}</td><td>${m.name}</td><td>${m.phone||'-'}</td><td>${money(feeVal)}</td></tr>`;
+      } else {
+        combinedPendingRows += `<tr><td>${cfg.name}</td><td>${seatTypeLabel}</td><td>${m.name}</td><td>${m.phone||'-'}</td><td>Pending</td></tr>`;
+      }
+    });
+  }
+
+  let win = window.open('', '_blank');
+  win.document.write(`
+    <html><head><title>All Libraries Report - ${curMonthName}</title>
+    <style>body{font-family:Arial;padding:15px;color:#111}h2,h3{text-align:center;margin:4px 0}.summary{display:flex;justify-content:space-around;background:#f1f5f9;padding:10px;border-radius:6px;margin:10px 0;font-weight:bold;font-size:12px}table{width:100%;border-collapse:collapse;margin-top:8px;font-size:12px}th,td{border:1px solid #ccc;padding:6px;text-align:left}th{background:#0f172a;color:#fff}</style></head><body>
+    <h2>📚 SHREEJI LIBRARY (ALL ROOMS COMBINED)</h2>
+    <h3>જ્યાં મહેનતને મળે સફળતાનું સરનામું.</h3>
+    <h3>Monthly Report: ${curMonthName}</h3>
+    <div class="summary"><div>Total Paid: ${totalPaidCount}</div><div>Total Collection: ${money(totalCollAmt)}</div></div>
+    <h4>Paid Members (All Libraries)</h4><table><tr><th>Library</th><th>Type</th><th>Name</th><th>Phone</th><th>Amount</th></tr>${combinedPaidRows || '<tr><td colspan="5">No records</td></tr>'}</table>
+    <h4 style="margin-top:15px;">Pending Members (All Libraries)</h4><table><tr><th>Library</th><th>Type</th><th>Name</th><th>Phone</th><th>Status</th></tr>${combinedPendingRows || '<tr><td colspan="5">No records</td></tr>'}</table>
+    <script>window.print();<\/script></body></html>
+  `);
 }
 
 function handleTypeChange(){
@@ -236,10 +501,15 @@ function render(){
   document.getElementById("activeMonthLabel").textContent = monthNiceName;
   document.getElementById("activeMonthLabel2").textContent = monthNiceName;
 
+  const cfg = ROOM_CONFIG[currentRoomId];
+  const totalSeatsInRoom = getRoomSeatsCount(currentRoomId);
+  document.getElementById("totalSeats").textContent = totalSeatsInRoom;
+
   const q=document.getElementById("search").value.toLowerCase().trim(), filter=document.getElementById("statusFilter").value;
   let occupied=0,unfixedCount=0,paid=0,collection=0;
   
-  members.forEach(m=>{
+  const roomMembers = getRoomMembers();
+  roomMembers.forEach(m=>{
     if(!isMemberActiveInActiveMonth(m)) return;
     const feeVal = Number(m.fee || (m.type==="unfixed"?900:1100));
     if(isPaidForActive(m)){
@@ -254,13 +524,13 @@ function render(){
   });
 
   document.getElementById("occupied").textContent=occupied;
-  document.getElementById("empty").textContent=TOTAL_SEATS-occupied;
+  document.getElementById("empty").textContent=totalSeatsInRoom-occupied;
   document.getElementById("unfixedCount").textContent=unfixedCount;
   document.getElementById("paidCount").textContent=paid;
   document.getElementById("collection").textContent=money(collection);
 
   const seats=document.getElementById("seats"); seats.innerHTML="";
-  for(let s=1;s<=TOTAL_SEATS;s++){
+  for(let s=cfg.start; s<=cfg.end; s++){
     const m=getMember(s);
     const div=document.createElement("button");
     div.className=`seat ${m?"occupied":"empty"} ${m&&!isPaidForActive(m)?"pending":""}`;
@@ -275,7 +545,7 @@ function render(){
   }
 
   const rows=document.getElementById("memberRows"); rows.innerHTML="";
-  const activeMembers = members.filter(m => isMemberActiveInActiveMonth(m));
+  const activeMembers = roomMembers.filter(m => isMemberActiveInActiveMonth(m));
   const sorted=[...activeMembers].sort((a,b)=>{
     if(a.type==="unfixed" && b.type!=="unfixed") return 1;
     if(a.type!=="unfixed" && b.type==="unfixed") return -1;
@@ -302,10 +572,10 @@ function render(){
       const defaultFee = money(m.fee || (m.type==="unfixed"?900:1100));
 
       if(isPaidForActive(m)){
-        msg = encodeURIComponent(`📚 *શ્રીજી લાઈબ્રેરી - ફી પહોંચ (Receipt)*\n-----------------------------------\n*નામ:* ${m.name}\n*પ્રકાર:* ${(m.type==="unfixed"?"Unfixed Member":"Seat "+m.seat)}\n*મહિનો:* ${monthNiceName}\n*ભરેલી રકમ:* ${defaultFee}\n*સ્ટેટસ:* ✓ ફી ભરેલ (Paid)\n-----------------------------------\nધન્યવાદ! શ્રીજી લાઈબ્રેરી મેનેજમેન્ટ\n*“જ્યાં મહેનતને મળે સફળતાનું સરનામું.”*`);
+        msg = encodeURIComponent(`📚 *${cfg.name} - ફી પહોંચ (Receipt)*\n-----------------------------------\n*નામ:* ${m.name}\n*પ્રકાર:* ${(m.type==="unfixed"?"Unfixed Member":"Seat "+m.seat)}\n*મહિનો:* ${monthNiceName}\n*ભરેલી રકમ:* ${defaultFee}\n*સ્ટેટસ:* ✓ ફી ભરેલ (Paid)\n-----------------------------------\nધન્યવાદ! શ્રીજી લાઈબ્રેરી મેનેજમેન્ટ\n*“જ્યાં મહેનતને મળે સફળતાનું સરનામું.”*`);
       } else {
         let seatText = m.type==="unfixed" ? "Unfixed" : m.seat;
-        msg = encodeURIComponent(`*📚 શ્રીજી લાઈબ્રેરી – ફી રિમાઇન્ડર*\n━━━━━━━━━━━━━━━━━\n\n🙏 નમસ્તે\n${m.name},\n\n🪑 સીટ નં.: ${seatText}\n💰 બાકી ફી: ${defaultFee}\n📅 મહિનો: ${monthNiceName}\n\nઆપની આ મહિનાની લાઈબ્રેરી ફી ${defaultFee} બાકી છે.\nકૃપા કરીને નીચે આપેલ ક્યૂઆર કોડની લિંક પર ક્લિક કરીને ઓનલાઈન ફી ભરી આપવા વિનંતી છે:\nhttps://i.ibb.co/r2g8bSmm/IMG-20261006-WA0000.jpg\n\nજેથી આપનું સીટ રિઝર્વેશન સતત ચાલુ રહી શકે.\n━━━━━━━━━━━━━━━━━\n🙏 આપના સહકાર બદલ આભાર.\n\n– શ્રીજી લાઈબ્રેરી મેનેજમેન્ટ\n*“જ્યાં મહેનતને મળે સફળતાનું સરનામું.”*`);
+        msg = encodeURIComponent(`*📚 ${cfg.name} – ફી રિમાઇન્ડર*\n━━━━━━━━━━━━━━━━━\n\n🙏 નમસ્તે\n${m.name},\n\n🪑 સીટ નં.: ${seatText}\n💰 બાકી ફી: ${defaultFee}\n📅 મહિનો: ${monthNiceName}\n\nઆપની આ મહિનાની લાઈબ્રેરી ફી ${defaultFee} બાકી છે.\nકૃપા કરીને નીચે આપેલ ક્યૂઆર કોડની લિંક પર ક્લિક કરીને ઓનલાઈન ફી ભરી આપવા વિનંતી છે:\nhttps://i.ibb.co/r2g8bSmm/IMG-20261006-WA0000.jpg\n\nજેથી આપનું સીટ રિઝર્વેશન સતત ચાલુ રહી શકે.\n━━━━━━━━━━━━━━━━━\n🙏 આપના સહકાર બદલ આભાર.\n\n– શ્રીજી લાઈબ્રેરી મેનેજમેન્ટ\n*“જ્યાં મહેનતને મળે સફળતાનું સરનામું.”*`);
       }
       waBtn = `<button class="small whatsapp" onclick="playHardBeep(); window.open('https://wa.me/91${m.phone}?text=${msg}')">WA</button>`;
     }
@@ -322,12 +592,13 @@ function render(){
       </div></td>`;
     rows.appendChild(tr);
   });
-  if(!filtered.length)rows.innerHTML='<tr><td colspan="7" class="empty-state">No members found for this month.</td></tr>';
+  if(!filtered.length)rows.innerHTML='<tr><td colspan="7" class="empty-state">No members found in this room for this month.</td></tr>';
 }
 
 function fillSeats(selected){
+  const cfg = ROOM_CONFIG[currentRoomId];
   const sel=document.getElementById("seat");sel.innerHTML="";
-  for(let s=1;s<=TOTAL_SEATS;s++){
+  for(let s=cfg.start; s<=cfg.end; s++){
     const m=getMember(s);
     if(!m||Number(s)===Number(selected))sel.innerHTML+=`<option value="${s}">Seat ${s}${m?" — "+esc(m.name):" — Empty"}</option>`;
   }
@@ -376,9 +647,18 @@ function clearThisSeat(id){
   if(confirm(`Are you sure you want to clear/remove ${m.name}?`)){
     members = members.filter(x => x.id !== id);
     save();
-    closeModal();
     render();
     toast("Seat cleared successfully");
+  }
+}
+
+function clearRoomData(){
+  const cfg = ROOM_CONFIG[currentRoomId];
+  if(confirm(`Warning: All members in ${cfg.name} will be deleted!`)){
+    members = members.filter(x => Number(x.roomId) !== Number(currentRoomId));
+    save();
+    render();
+    toast("Room data cleared");
   }
 }
 
@@ -389,12 +669,13 @@ function saveMember(e){
   const seat=type==="fixed"?Number(document.getElementById("seat").value):null;
   
   if(type==="fixed"){
-    const duplicate=members.find(m=>m.type!=="unfixed" && Number(m.seat)===seat && m.id!==id && isMemberActiveInActiveMonth(m));
-    if(duplicate){toast("That seat is already occupied for this month!");return}
+    const duplicate=getRoomMembers().find(m=>m.type!=="unfixed" && Number(m.seat)===seat && m.id!==id && isMemberActiveInActiveMonth(m));
+    if(duplicate){toast("That seat is already occupied in this room for this month!");return}
   }
 
   const old=id?members.find(x=>x.id===id):null;
-  const m=old||{id:uid(),payments:{}};
+  const m=old||{id:uid(),roomId:currentRoomId,payments:{}};
+  m.roomId = currentRoomId;
   m.type=type;
   m.seat=seat;
   m.name=document.getElementById("name").value.trim();
@@ -440,12 +721,13 @@ function openMonthlyReportModal(){
   document.getElementById("reportModal").style.display="block";
   const [yStr, mStr] = activeYearMonth.split("-");
   const curMonthName = MONTH_NAMES[parseInt(mStr, 10)-1] + " " + yStr;
+  const cfg = ROOM_CONFIG[currentRoomId];
 
   let paidMembersList = [];
   let pendingMembersList = [];
   let totalCollection = 0;
 
-  members.forEach(m => {
+  getRoomMembers().forEach(m => {
     if(!isMemberActiveInActiveMonth(m)) return;
     const feeVal = Number(m.fee || (m.type==="unfixed"?900:1100));
     if(m.payments && m.payments[activeYearMonth]){
@@ -463,9 +745,9 @@ function openMonthlyReportModal(){
   if(!pendingHtml) pendingHtml = '<tr><td colspan="4" class="empty-state">No pending members!</td></tr>';
 
   document.getElementById("reportModalBody").innerHTML = `
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:gap; gap:8px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:8px;">
       <div>
-        <h3 style="margin:0; color:#0f172a; font-size:15px;">Report: ${curMonthName}</h3>
+        <h3 style="margin:0; color:#0f172a; font-size:15px;">Report (${cfg.name}): ${curMonthName}</h3>
         <p style="margin:2px 0 0; font-size:11px; color:#64748b;">Shreeji Library Summary</p>
       </div>
       <button class="btn primary" style="padding:6px 10px; font-size:12px;" onclick="playHardBeep(); printMonthlyReport()">🖨 Print</button>
@@ -497,12 +779,13 @@ function openMonthlyReportModal(){
 function printMonthlyReport(){
   const [yStr, mStr] = activeYearMonth.split("-");
   const curMonthName = MONTH_NAMES[parseInt(mStr, 10)-1] + " " + yStr;
+  const cfg = ROOM_CONFIG[currentRoomId];
   
   let paidMembersList = [];
   let pendingMembersList = [];
   let totalCollection = 0;
 
-  members.forEach(m => {
+  getRoomMembers().forEach(m => {
     if(!isMemberActiveInActiveMonth(m)) return;
     const feeVal = Number(m.fee || (m.type==="unfixed"?900:1100));
     if(m.payments && m.payments[activeYearMonth]){
@@ -518,9 +801,10 @@ function printMonthlyReport(){
 
   let win = window.open('', '_blank');
   win.document.write(`
-    <html><head><title>Monthly Report - ${curMonthName}</title>
+    <html><head><title>Monthly Report - ${cfg.name} (${curMonthName})</title>
     <style>body{font-family:Arial;padding:15px;color:#111}h2,h3{text-align:center;margin:4px 0}.summary{display:flex;justify-content:space-around;background:#f1f5f9;padding:10px;border-radius:6px;margin:10px 0;font-weight:bold;font-size:12px}table{width:100%;border-collapse:collapse;margin-top:8px;font-size:12px}th,td{border:1px solid #ccc;padding:6px;text-align:left}th{background:#0f172a;color:#fff}</style></head><body>
-    <h2>📚 SHREEJI LIBRARY</h2>
+    <h2>📚 SHREEJI LIBRARY (${cfg.name})</h2>
+    <h3>જ્યાં મહેનતને મળે સફળતાનું સરનામું.</h3>
     <h3>Monthly Report: ${curMonthName}</h3>
     <div class="summary"><div>Paid: ${paidMembersList.length}</div><div>Total: ${money(totalCollection)}</div><div>Pending: ${pendingMembersList.length}</div></div>
     <h4>Paid Members</h4><table><tr><th>Type</th><th>Name</th><th>Phone</th><th>Amount</th></tr>${paidRows || '<tr><td colspan="4">No records</td></tr>'}</table>
@@ -532,6 +816,7 @@ function printMonthlyReport(){
 function printReceipt(id){
   const m=members.find(x=>x.id===id);if(!m)return;
   const y=new Date().getFullYear();
+  const cfg = ROOM_CONFIG[m.roomId || 1];
   let paidMonthsList = [];
   let totalPaidAmount = 0;
   const defaultFee = Number(m.fee || (m.type==="unfixed"?900:1100));
@@ -554,7 +839,8 @@ function printReceipt(id){
     <style>body{font-family:Arial,sans-serif;padding:15px;color:#111;background:#f9f9f9}.receipt{max-width:380px;margin:auto;border:2px solid #0f172a;padding:18px;border-radius:12px;background:#fff}.lib-title{text-align:center;color:#0f172a;margin:0 0 4px;font-size:18px}.lib-sub{text-align:center;font-size:11px;color:#64748b;margin-bottom:12px}hr{border:0;border-top:1px dashed #cbd5e1;margin:10px 0}.row{display:flex;justify-content:space-between;margin:6px 0;font-size:13px}.footer{text-align:center;margin-top:18px;font-size:11px;color:#64748b}.badge-paid{background:#dcfce7;color:#166534;padding:3px 6px;border-radius:6px;font-weight:bold;font-size:11px}</style></head><body>
     <div class="receipt">
       <h2 class="lib-title">📚 SHREEJI LIBRARY</h2>
-      <div class="lib-sub">Reading Library Management</div>
+      <div class="lib-sub" style="font-style:italic;margin-bottom:6px;">જ્યાં મહેનતને મળે સફળતાનું સરનામું.</div>
+      <div class="lib-sub">${cfg.name} Management</div>
       <hr>
       <div class="row"><span><b>Date:</b> ${new Date().toLocaleDateString()}</span><span><span class="badge-paid">RECEIPT</span></span></div>
       <hr>
@@ -566,7 +852,7 @@ function printReceipt(id){
       <div class="row"><span><b>Paid Months:</b></span> <span style="text-align:right; max-width:200px;">${monthsText}</span></div>
       <div class="row" style="font-size:15px; margin-top:10px;"><span><b>Total Paid:</b></span> <span style="color:#16a34a; font-weight:800;">${money(totalPaidAmount)}</span></div>
       <hr>
-      <div class="footer"><p>Thank you for choosing Shreeji Library!</p></div>
+      <div class="footer"><p>Thank you for choosing ${cfg.name}!</p></div>
     </div>
     <script>window.print();<\/script></body></html>
   `);
@@ -575,12 +861,12 @@ function printReceipt(id){
 function deleteMember(id){
   const m=members.find(x=>x.id===id);if(!m)return;
   if(!confirm(`Delete ${m.name}?`))return;
-  members=members.filter(x=>x.id!==id);save();render();toast("Member deleted");
+  members=members.filter(x=>x.id!==id);save();updateHomeStats();render();toast("Member deleted");
 }
 
 function exportData(){
-  const blob=new Blob([JSON.stringify({app:"Shreeji Library Manager",version:20,exportedAt:new Date().toISOString(),members},null,2)],{type:"application/json"});
-  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="shreeji-library-backup-"+new Date().toISOString().slice(0,10)+".json";a.click();URL.revokeObjectURL(a.href);toast("Backup downloaded");
+  const blob=new Blob([JSON.stringify({app:"Shreeji Library Multi-Room Manager",version:28,exportedAt:new Date().toISOString(),members},null,2)],{type:"application/json"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="shreeji-library-multiroom-backup-"+new Date().toISOString().slice(0,10)+".json";a.click();URL.revokeObjectURL(a.href);toast("Backup downloaded");
 }
 
 function importData(e){
@@ -589,18 +875,16 @@ function importData(e){
     try{const data=JSON.parse(reader.result);const arr=Array.isArray(data)?data:data.members;
       if(!Array.isArray(arr))throw Error();
       if(!confirm("Restore backup and replace current data?"))return;
-      members=arr.filter(m=>m&&m.name).map(m=>({...m,id:m.id||uid(),payments:m.payments||{}}));
-      save();render();toast("Backup restored");
+      members=arr.filter(m=>m&&m.name).map(m=>({...m,id:m.id||uid(),roomId:m.roomId||1,payments:m.payments||{}}));
+      save();updateHomeStats();render();toast("Backup restored");
     }catch(err){alert("Invalid backup file.");}
     e.target.value="";
   };reader.readAsText(file);
 }
 
-function clearAll(){if(!members.length){toast("No data");return}if(confirm("Warning: All data will be deleted!")){members=[];save();render();toast("All data cleared")}}
-
 document.getElementById("modal").addEventListener("click",e=>{if(e.target.id==="modal")closeModal()});
 document.getElementById("reportModal").addEventListener("click",e=>{if(e.target.id==="reportModal")closeReportModal()});
-render();
+updateHomeStats();
 </script>
 </body>
 </html>
