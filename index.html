@@ -157,7 +157,7 @@ h1{font-size:18px;margin:0 0 2px}.subtitle{font-size:11px;opacity:.8}
 
 <script>
 const TOTAL_SEATS=35;
-const KEY="shreeji_library_manager_v19";
+const KEY="shreeji_library_manager_v20";
 const MONTH_NAMES=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 let members=load();
 let activeYearMonth = currentKey();
@@ -305,7 +305,7 @@ function render(){
         msg = encodeURIComponent(`📚 *શ્રીજી લાઈબ્રેરી - ફી પહોંચ (Receipt)*\n-----------------------------------\n*નામ:* ${m.name}\n*પ્રકાર:* ${(m.type==="unfixed"?"Unfixed Member":"Seat "+m.seat)}\n*મહિનો:* ${monthNiceName}\n*ભરેલી રકમ:* ${defaultFee}\n*સ્ટેટસ:* ✓ ફી ભરેલ (Paid)\n-----------------------------------\nધન્યવાદ! શ્રીજી લાઈબ્રેરી મેનેજમેન્ટ\n*“જ્યાં મહેનતને મળે સફળતાનું સરનામું.”*`);
       } else {
         let seatText = m.type==="unfixed" ? "Unfixed" : m.seat;
-        msg = encodeURIComponent(`*📚 શ્રીજી લાઈબ્રેરી – ફી રિમાઇન્ડર*\n━━━━━━━━━━━━━━━━━\n\n🙏 નમસ્તે\n${m.name},\n\n🪑 સીટ નં.: ${seatText}\n💰 બાકી ફી: ${defaultFee}\n📅 મહિનો: ${monthNiceName}\n\nઆપની આ મહિનાની લાઈબ્રેરી ફી ${defaultFee} બાકી છે.\nકૃપા કરીને નીચે આપેલ QR કોડની લિંક પર ક્લિક કરીને ઓનલાઈન ફી ભરી આપવા વિનંતી છે[span_1](start_span)[span_1](end_span):\n🔗 https://i.ibb.co/r2g8bSmm/IMG-20261006-WA0000.jpg[span_2](start_span)[span_2](end_span)\n\nજેથી આપનું સીટ રિઝર્વેશન સતત ચાલુ રહી શકે.\n━━━━━━━━━━━━━━━━━\n🙏 આપના સહકાર બદલ આભાર.\n\n– શ્રીજી લાઈબ્રેરી મેનેજમેન્ટ\n*“જ્યાં મહેનતને મળે સફળતાનું સરનામું.”*`);
+        msg = encodeURIComponent(`*📚 શ્રીજી લાઈબ્રેરી – ફી રિમાઇન્ડર*\n━━━━━━━━━━━━━━━━━\n\n🙏 નમસ્તે\n${m.name},\n\n🪑 સીટ નં.: ${seatText}\n💰 બાકી ફી: ${defaultFee}\n📅 મહિનો: ${monthNiceName}\n\nઆપની આ મહિનાની લાઈબ્રેરી ફી ${defaultFee} બાકી છે.\nકૃપા કરીને નીચે આપેલ ક્યૂઆર કોડની લિંક પર ક્લિક કરીને ઓનલાઈન ફી ભરી આપવા વિનંતી છે:\nhttps://i.ibb.co/r2g8bSmm/IMG-20261006-WA0000.jpg\n\nજેથી આપનું સીટ રિઝર્વેશન સતત ચાલુ રહી શકે.\n━━━━━━━━━━━━━━━━━\n🙏 આપના સહકાર બદલ આભાર.\n\n– શ્રીજી લાઈબ્રેરી મેનેજમેન્ટ\n*“જ્યાં મહેનતને મળે સફળતાનું સરનામું.”*`);
       }
       waBtn = `<button class="small whatsapp" onclick="playHardBeep(); window.open('https://wa.me/91${m.phone}?text=${msg}')">WA</button>`;
     }
@@ -579,7 +579,7 @@ function deleteMember(id){
 }
 
 function exportData(){
-  const blob=new Blob([JSON.stringify({app:"Shreeji Library Manager",version:19,exportedAt:new Date().toISOString(),members},null,2)],{type:"application/json"});
+  const blob=new Blob([JSON.stringify({app:"Shreeji Library Manager",version:20,exportedAt:new Date().toISOString(),members},null,2)],{type:"application/json"});
   const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="shreeji-library-backup-"+new Date().toISOString().slice(0,10)+".json";a.click();URL.revokeObjectURL(a.href);toast("Backup downloaded");
 }
 
